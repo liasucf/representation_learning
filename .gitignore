@@ -1,2 +1,10 @@
 /Friends
 glove.840B.300d.txt
+.ipynb_checkpoints
+emotion_label_decoder.pkl
+emotion_label_encoder.pkl
+glv_embedding_matrix
+tokenizer.pkl
+dailydialog/act_label_decoder.pkl
+dailydialog/act_label_encoder.pkl
+dailydialog/daily_dialogue.pkl
