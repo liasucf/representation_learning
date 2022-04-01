@@ -15,6 +15,13 @@ from keras.preprocessing.text import Tokenizer
 import contractions
 from sklearn.preprocessing import LabelBinarizer
 
+"Convert a numpy array into a tensor"
+def convert_tensor(tensor):
+    np_tensor = tensor.numpy()
+    tensor = tf.convert_to_tensor(np_tensor, dtype="float32")
+
+    return tensor
+
 "deal with contracted texts"
 def expand_text(text):
     expanded_words = []
@@ -27,8 +34,6 @@ def expand_text(text):
     expanded_text = ' '.join(expanded_words)
     return expanded_text
 
-
-
 "clean dataset"
 def preprocess_text(x):
     for punct in '"!&?.,}-/<>#$%\()*+:;=?@[\\]^_`|\~':
@@ -38,7 +43,7 @@ def preprocess_text(x):
     
     return x
 
-
+"transform the json into a dataframe"
 def create_sentences(filename, split):
     sentences, emotion_labels, speakers, conv_id, = [], [], [], []
     
@@ -64,6 +69,7 @@ def create_sentences(filename, split):
     
     return data
 
+"add padding to the conversations"
 def pad_collate(x, max_len):   
     
     x = tf.cast(x, tf.float32)
@@ -73,7 +79,7 @@ def pad_collate(x, max_len):
     x = tf.concat([x, tf.zeros(pad_size)], 0)
         
     return x
-
+"apply the padding in the datasets"
 def apply_padding(data):
     # find longest sequence
     new_batch = []
@@ -99,7 +105,7 @@ def apply_padding(data):
         new_y = np.array(new_y)
         new_batch.append([new_messages, new_speakers, new_y])
     return new_batch
-
+"build batch according to batch size and padding defined"
 def build_batch(data, number_speakers, batch_size):
     
     dialogue = data[data["speaker"].apply(lambda x: len(set(x)) == number_speakers)]
@@ -121,7 +127,7 @@ def build_batch(data, number_speakers, batch_size):
     new_data = apply_padding(data)
 
     return new_data
-
+"tranform classes into 0 and 1 representations"
 class MyLabelBinarizer:
 
     def __init__(self):
@@ -181,10 +187,10 @@ def load_pretrained_glove():
     f.close()
     print("Completed loading pretrained GloVe model.")
     return glv_vector
-
+"apply the encoder"
 def encode_labels(encoder, l):
     return encoder[l]
-
+"create the test subset of data from loaded Friends data"
 def create_test_dataset():
     test_data = create_sentences('Friends/friends_test.json', 'test')
     
@@ -198,6 +204,8 @@ def create_test_dataset():
         tokenizer = pickle.load(f)
     
     test_sequence = tokenizer.texts_to_sequences(list(test_data['sentence']))
+
+    test_data['sentence_length'] = [len(item) for item in test_sequence]
     
     max_num_tokens = 250
 
@@ -206,19 +214,21 @@ def create_test_dataset():
     
     test_data['emotion_true'] = pd.get_dummies(test_data['encoded_emotion_label']).values.tolist()
     test_data['sequence'] = np.array(test_data['sequence'])
+    
+    #agregate by the data by conversation
     dialogue_test_data = test_data.groupby("conv_id").agg(list)
-
-
+    #encode the speaker into 0 when there is no one talking and 1 when there is
     dialogue_test_data['encoded_speaker'] = dialogue_test_data['speaker'].apply(lambda s: MyLabelBinarizer().fit_transform(s))
     dialogue_test_data['sequence'] = dialogue_test_data['sequence'].apply(lambda s: np.array(np.array(s)))
     dialogue_test_data['encoded_emotion_label'] = dialogue_test_data['encoded_emotion_label'].apply(lambda s: np.array(np.array(s)))
     dialogue_test_data['encoded_speaker'] = dialogue_test_data['encoded_speaker'].apply(lambda s: np.array(np.array(s)))
     dialogue_test_data.reset_index(inplace=True)
-    
+    #save test data
     pickle.dump(dialogue_test_data, open('test_data.pkl', 'wb'))
     
     return dialogue_test_data
 
+"create the train subset of data from loaded Friends data"
 def create_train_dataset():
     
     train_data = create_sentences('Friends/friends_train.json', 'train')
@@ -248,18 +258,21 @@ def create_train_dataset():
     ## convert the sentences into sequences ##
     train_sequence = tokenizer.texts_to_sequences(list(train_data['sentence']))
     
+    train_data['sentence_length'] = [len(item) for item in train_sequence]
+    
     max_num_tokens = 250
 
     train_sequence = pad_sequences(train_sequence, maxlen=max_num_tokens, padding='post')
 
 
     train_data['sequence'] = list(train_sequence)
-        
+    #tranform the emotion label into 0 and 1 representations
     train_data['emotion_true'] = pd.get_dummies(train_data['encoded_emotion_label']).values.tolist()
     train_data['sequence'] = np.array(train_data['sequence'])
+    
+    #agregate by the data by conversation
+
     dialogue_train_data = train_data.groupby("conv_id").agg(list)
-
-
     dialogue_train_data['encoded_speaker'] = dialogue_train_data['speaker'].apply(lambda s: MyLabelBinarizer().fit_transform(s))
     dialogue_train_data['sequence'] = dialogue_train_data['sequence'].apply(lambda s: np.array(np.array(s)))
     dialogue_train_data['encoded_emotion_label'] = dialogue_train_data['encoded_emotion_label'].apply(lambda s: np.array(np.array(s)))
@@ -267,7 +280,7 @@ def create_train_dataset():
 
     dialogue_train_data.reset_index(inplace=True)
 
-    
+    #save train data
     pickle.dump(dialogue_train_data, open('train_data.pkl', 'wb'))
 
     if not os.path.exists('glv_embedding_matrix'):
@@ -289,9 +302,3 @@ def create_train_dataset():
     print ('Done. Completed preprocessing.')
 
     return dialogue_train_data
-
-def convert_tensor(tensor):
-    np_tensor = tensor.numpy()
-    tensor = tf.convert_to_tensor(np_tensor, dtype="float32")
-
-    return tensor

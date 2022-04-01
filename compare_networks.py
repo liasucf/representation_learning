@@ -8,36 +8,65 @@ import warnings
 warnings.filterwarnings('ignore') 
 import os
 import numpy as np 
-import pickle
 from sklearn.metrics import classification_report
 from simple_cnn import predict_CNN
 from dialogue_rnn import predict_dialogue_RNN
 from utils import build_batch, create_test_dataset
+import time
+
+
+"""Code to compare the DialogueRNN and CNN networks in the emotion classification
+problem for the Friends Dataset
+
+Test the networks in the test data and analyse accuracy and other metrics
+"""
 
 batch_size = 32
 
+#loade test data
 if os.path.exists('test_data.pkl'):
-    dialogue_test_data = np.load(open('test_data.pkl', 'rb') ,allow_pickle=True)
+    test_data = np.load(open('test_data.pkl', 'rb') ,allow_pickle=True)
 else: 
     dialogue_test_data = create_test_dataset()
-print(dialogue_test_data)
-#data1 = build_batch(dialogue_train_data, 1, 8)
+
+#create batchs from the test data with conversations of 2,3 and 4 people
 data2 = build_batch(dialogue_test_data, 2, batch_size)
 data3 = build_batch(dialogue_test_data, 3, batch_size)
 data4 = build_batch(dialogue_test_data, 4, batch_size)
 data_test = data2 + data3 + data4
 
-with open("emotion_label_decoder.pkl", "rb") as f:
-    decoder_label = pickle.load(f)
-
+# ---------- predict CNN
+start_time = time.time()
 y_pred, y_true, moyenne_accuracy = predict_CNN(data_test)
+
+final_time = time.time() - start_time
 print("Test set CNN accuracy:")
 print(moyenne_accuracy)
-example = classification_report(y_true[0][0], y_pred[0][0])
-print(example)
+print("Time")
+print(final_time)
 
+y_pred_conversation_1 = [item for sublist in y_pred[0] for item in sublist]
+y_true_conversation_1 = [item for sublist in y_true[0] for item in sublist]
+
+
+print(classification_report(y_true_conversation_1, y_pred_conversation_1))
+
+# ---------- predict Dialogue RNN
+
+start_time = time.time()
 y_pred, y_true, moyenne_accuracy = predict_dialogue_RNN(data_test, batch_size)
 print("Test set Dialogue RNN accuracy:")
 print(moyenne_accuracy)
+final_time = time.time() - start_time
+print("Time")
+print(final_time)
 
-print(classification_report(y_true[0][0], y_pred[0][0]))
+y_pred_conversation_1 = [item for sublist in y_pred[0] for item in sublist]
+y_true_conversation_1 = [item for sublist in y_true[0] for item in sublist]
+
+
+print(classification_report(y_true_conversation_1, y_pred_conversation_1))
+
+#if necessary to decode the labels to emotion
+#with open("emotion_label_decoder.pkl", "rb") as f:
+    #decoder_label = pickle.load(f)
