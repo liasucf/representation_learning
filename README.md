@@ -8,7 +8,7 @@ In this directory you will find 1 video, 4 .py files,  some dataset in pkl forma
 The main objective of this project is to implement the DialogueRNN model in Tensorflow. 
 We trained and tested our implementation with data from the Friends series. The algorithm predicts the emotion of a character when he announces a line. Finally we compared the performance of our algorithm with a simple CNN.
 
-##Implementation, Test \& Comparison 
+## Implementation, Test \& Comparison 
 
 dialgoue_rnn.py: 
 File that allows to train Dialogue RNN, it contains the algorithm implemented in Tensorflow.
@@ -28,12 +28,12 @@ File that contains additional functions to our implementation such as data pre-p
 To use this file glove.840B.300d.txt  is required, it can be download at this adress : 
 https://www.kaggle.com/datasets/takuok/glove840b300dtxt
 
-
+---
 
 Credits: This work was made by Lia Furtado and Hugo Vinson. 
 
 Useful links: 
-GIT Repository: https://github.com/liasucf/representation_learning
-Download Glove: https://www.kaggle.com/datasets/takuok/glove840b300dtxt
-Original article : https://arxiv.org/abs/1811.00405
+- GIT Repository: https://github.com/liasucf/representation_learning
+- Download Glove: https://www.kaggle.com/datasets/takuok/glove840b300dtxt
+- Original article : https://arxiv.org/abs/1811.00405
 
