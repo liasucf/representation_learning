@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar 30 09:26:48 2022
-
-@author: lfurtado
-"""
 import os
 import json
 from keras.preprocessing.sequence import pad_sequences

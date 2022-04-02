@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 29 16:38:46 2022
-
-@author: lfurtado
-"""
 import warnings
 warnings.filterwarnings('ignore') 
 import os
